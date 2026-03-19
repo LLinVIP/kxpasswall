@@ -4,6 +4,25 @@ function main(config) {
     if (hkGroup && hkGroup.proxies) {
       hkGroup.proxies = hkGroup.proxies.filter(proxyName => !proxyName.includes('GAME'));
     }
+
+    // 1.1 删除部分规则组（以及其对应的路由规则引用）
+    const groupsToRemove = ['Spotify', 'Bahamut', 'PikPak', 'E-Hentai'];
+    if (Array.isArray(config['proxy-groups'])) {
+      config['proxy-groups'] = config['proxy-groups'].filter(group => !groupsToRemove.includes(group?.name));
+    }
+
+    const rulesToRemove = new Set([
+      'GEOSITE,SPOTIFY,Spotify',
+      'GEOSITE,BAHAMUT,Bahamut',
+      'GEOSITE,PIKPAK,PikPak',
+      'RULE-SET,EHentai,E-Hentai',
+    ]);
+    if (Array.isArray(config.rules)) {
+      config.rules = config.rules.filter(ruleLine => {
+        if (typeof ruleLine !== 'string') return true;
+        return !rulesToRemove.has(ruleLine.trim());
+      });
+    }
   
     // 2. 注入基于 jsDelivr 的 Rule Provider (远程规则集)
     // 如果基础模板没有 rule-providers 字段，我们先初始化它
@@ -16,7 +35,7 @@ function main(config) {
       type: 'http',
       behavior: 'classical',
       format: 'text', // 🌟 新增：明确告诉客户端这是纯文本格式
-      url: 'https://cdn.jsdelivr.net/gh/你的GitHub用户名/你的仓库名@main/uk_rules.list', // ⚠️ 可以用 .list 或 .txt 扩展名
+      url: 'https://gcore.jsdelivr.net/gh/LLinVIP/kxpasswall@main/uk_rules.list',
       path: './ruleset/custom_uk_rules.list',
       interval: 86400
     };
@@ -26,7 +45,7 @@ function main(config) {
       type: 'http',
       behavior: 'classical',
       format: 'text', // 🌟 新增：明确告诉客户端这是纯文本格式
-      url: 'https://cdn.jsdelivr.net/gh/你的GitHub用户名/你的仓库名@main/direct_rules.list', 
+      url: 'https://gcore.jsdelivr.net/gh/LLinVIP/kxpasswall@main/direct.list',
       path: './ruleset/custom_direct_rules.list',
       interval: 86400
     };
