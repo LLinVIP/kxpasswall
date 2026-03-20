@@ -8,7 +8,15 @@ function main(config) {
     // 1.1 删除部分规则组（以及其对应的路由规则引用）
     const groupsToRemove = ['Spotify', 'Bahamut', 'PikPak', 'E-Hentai'];
     if (Array.isArray(config['proxy-groups'])) {
-      config['proxy-groups'] = config['proxy-groups'].filter(group => !groupsToRemove.includes(group?.name));
+      // 先从所有策略组的 proxies 里去掉对已删组的引用（否则 GLOBAL 等仍会引用 Bahamut 导致校验失败）
+      for (const group of config['proxy-groups']) {
+        if (Array.isArray(group?.proxies)) {
+          group.proxies = group.proxies.filter((p) => !groupsToRemove.includes(p));
+        }
+      }
+      config['proxy-groups'] = config['proxy-groups'].filter(
+        (group) => !groupsToRemove.includes(group?.name)
+      );
     }
 
     const rulesToRemove = new Set([
