@@ -19,6 +19,21 @@ function main(config) {
       );
     }
 
+    // 1.2 新增 ad 策略组：让自定义 ad_rules.list 能单独走一组策略
+    if (Array.isArray(config['proxy-groups'])) {
+      const adGroupName = 'ad';
+      const hasAdGroup = config['proxy-groups'].some((g) => g?.name === adGroupName);
+      if (!hasAdGroup) {
+        config['proxy-groups'].push({
+          name: adGroupName,
+          icon: "https://gcore.jsdelivr.net/gh/Koolson/Qure@master/IconSet/Color/Hijacking.png",
+          type: "select",
+          // REJECT / REJECT-DROP 是 Clash 内置策略，不依赖具体节点
+          proxies: ["REJECT", "REJECT-DROP", "直连"],
+        });
+      }
+    }
+
     const rulesToRemove = new Set([
       'GEOSITE,SPOTIFY,Spotify',
       'GEOSITE,BAHAMUT,Bahamut',
@@ -57,10 +72,21 @@ function main(config) {
       path: './ruleset/custom_direct_rules.list',
       interval: 86400
     };
+
+    // 定义你的 ad 规则集（自定义广告规则）
+    config['rule-providers']['Custom_AD_Rules'] = {
+      type: 'http',
+      behavior: 'classical',
+      format: 'text',
+      url: 'https://gcore.jsdelivr.net/gh/LLinVIP/kxpasswall@main/ad_rules.list',
+      path: './ruleset/ad_rules.list',
+      interval: 86400
+    };
   
     // 3. 插入路由规则
     // 注意：将刚刚定义的远程规则集，分别指向对应的策略
     config.rules.unshift(
+      "RULE-SET,Custom_AD_Rules,ad", // 将自定义 ad 规则集指向 ad 分组
       "RULE-SET,Custom_Direct_Rules,DIRECT", // 将直连规则集指向 DIRECT
       "RULE-SET,Custom_UK_Rules,英国节点"     // 将英国规则集指向 英国节点
     );
